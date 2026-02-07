@@ -1,45 +1,38 @@
 import pytest
 import aiohttp
 import asyncio
-import pymorphy3
+from concurrent.futures import ProcessPoolExecutor
 from server import process_article
-from adapters.exceptions import ArticleNotFound
 
-# Фикстура для морфологического анализатора (создаем один раз)
 @pytest.fixture(scope="session")
-def morph():
-    return pymorphy3.MorphAnalyzer()
+def executor():
+    executor = ProcessPoolExecutor(max_workers=2)
+    yield executor
+    executor.shutdown()
 
-# Фикстура для словаря
 @pytest.fixture
 def charged_words():
-    return ['плохой', 'ужасный', 'шок']
+    return ['плохой', 'ужасный', 'шок', 'трамп']
 
 @pytest.mark.asyncio
-async def test_process_article_success(morph, charged_words):
-    # Тест успешной обработки (нужна живая ссылка или мок)
-    # Для простоты используем реальную ссылку, которая точно работает
+async def test_process_article_success(executor, charged_words):
     async with aiohttp.ClientSession() as session:
         url = 'https://inosmi.ru/20190629/245384784.html'
-        result = await process_article(session, morph, charged_words, url)
+        result = await process_article(session, executor, charged_words, url)
         assert result['status'] == 'OK'
         assert result['words_count'] > 0
-        assert 'score' in result
+        assert isinstance(result['score'], float)
 
 @pytest.mark.asyncio
-async def test_process_article_not_found(morph, charged_words):
+async def test_process_article_not_found(executor, charged_words):
     async with aiohttp.ClientSession() as session:
-        url = 'https://inosmi.ru/not-existent-article'
-        result = await process_article(session, morph, charged_words, url)
-        # В нашей логике 404 превращается либо в FETCH_ERROR (из-за raise_for_status)
-        # либо в PARSING_ERROR, если sanitize не нашел статью.
+        url = 'https://inosmi.ru/non-existent'
+        result = await process_article(session, executor, charged_words, url)
         assert result['status'] in ['FETCH_ERROR', 'PARSING_ERROR']
 
 @pytest.mark.asyncio
-async def test_process_article_timeout(morph, charged_words):
+async def test_process_article_timeout(executor, charged_words):
     async with aiohttp.ClientSession() as session:
-        # Ссылка, которая точно будет грузиться долго
         url = 'https://httpbin.org/delay/10'
-        # У нас в server.py таймаут 5 секунд, так что 10 секунд точно вызовут ошибку
-        result = await process_article(session, morph, charged_words, url)
+        result = await process_article(session, executor, charged_words, url)
         assert result['status'] == 'TIMEOUT'
