@@ -1,9 +1,8 @@
-aiohttp==3.*
-cchardet==2.*
-aiodns==2.*
-beautifulsoup4==4.*
-requests==2.*
-pytest==5.*
-pymorphy2==0.8
-pymorphy2-dicts==2.*
+aiohttp==3.9.*
+beautifulsoup4==4.12.*
+requests==2.31.*
+pytest==8.3.*
+pytest-asyncio==0.24.*
+pymorphy3==2.0.*
+pymorphy3-dicts-ru==2.4.*
 DAWG-Python==0.7.*
