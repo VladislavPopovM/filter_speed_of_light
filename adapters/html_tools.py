@@ -1,29 +1,18 @@
-DEFAULT_BLACKLIST_TAGS = [
-    'script',
-    'time'
-]
+DEFAULT_BLACKLIST_TAGS = ["script", "time"]
 
-DEFAULT_UNWRAPLIST_TAGS = [
-    'div',
-    'p',
-    'span',
-    'address',
-    'article',
-    'header',
-    'footer'
-]
+DEFAULT_UNWRAPLIST_TAGS = ["div", "p", "span", "address", "article", "header", "footer"]
 
 
 def remove_buzz_attrs(soup):
     """Remove all attributes except some special tags."""
     for tag in soup.find_all(True):
-        if tag.name == 'a':
+        if tag.name == "a":
             tag.attrs = {
-                'href': tag.attrs.get('href'),
+                "href": tag.attrs.get("href"),
             }
-        elif tag.name == 'img':
+        elif tag.name == "img":
             tag.attrs = {
-                'src': tag.attrs.get('src'),
+                "src": tag.attrs.get("src"),
             }
         else:
             tag.attrs = {}
@@ -31,7 +20,9 @@ def remove_buzz_attrs(soup):
     return soup
 
 
-def remove_buzz_tags(soup, blacklist=DEFAULT_BLACKLIST_TAGS, unwraplist=DEFAULT_UNWRAPLIST_TAGS):
+def remove_buzz_tags(
+    soup, blacklist=DEFAULT_BLACKLIST_TAGS, unwraplist=DEFAULT_UNWRAPLIST_TAGS
+):
     """Remove most of tags, leaves only tags significant for text analysis."""
     for tag in soup.find_all(True):
         if tag.name in blacklist:
